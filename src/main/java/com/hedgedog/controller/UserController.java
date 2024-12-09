@@ -1,5 +1,6 @@
 package com.hedgedog.controller;
 
+import com.hedgedog.repository.UserRepository;
 import com.hedgedog.model.User;
 import com.hedgedog.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +13,9 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @PostMapping("/register")
     public ResponseEntity<?> registerUser(@RequestBody User user) {
@@ -27,4 +31,15 @@ public class UserController {
         }
         return ResponseEntity.status(401).body("Invalid credentials");
     }
+
+    @GetMapping("/test-db")
+    public ResponseEntity<?> testDatabaseConnection() {
+        try {
+            userRepository.count(); // Try any operation
+            return ResponseEntity.ok("Database connection successful");
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body("Database connection failed: " + e.getMessage());
+        }
+    }
+
 }
