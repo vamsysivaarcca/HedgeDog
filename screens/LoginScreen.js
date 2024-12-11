@@ -8,31 +8,32 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     try {
-      console.log('Attempting login with:', { username, password });
-
       const response = await axios.post(
-        'http://192.168.86.25:8080/api/users/login', // Backend URL
+        'http://192.168.86.25:8080/api/users/login',
         null,
         { params: { username, password } }
       );
-
-      console.log('Login Response:', response.data); // Log full response
-
-      // Destructure response data
-      const { id: userId, status } = response.data; 
-
+  
+      console.log('Login Response:', response.data); // Add this log
+  
+      const { userId, status } = response.data;
+  
+      console.log('Extracted User ID:', userId); // Confirm userId is extracted
+  
       if (status === 'Login Successful') {
-        console.log('User ID:', userId);
-        Alert.alert('Success', 'Login successful!');
-        navigation.navigate('RegionScreen', { userId }); // Navigate with userId
+        console.log('Login Successful, User ID:', userId);
+  
+        // Navigate to the RegionScreen and pass userId
+        navigation.navigate('RegionScreen', { userId });
       } else {
         Alert.alert('Error', 'Invalid credentials');
       }
     } catch (error) {
       console.error('Login Error:', error.message);
-      Alert.alert('Error', 'Network Error or Invalid Credentials');
+      Alert.alert('Error', 'Failed to log in');
     }
   };
+  
 
   return (
     <View style={styles.container}>

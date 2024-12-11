@@ -1,7 +1,11 @@
 import React from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet } from 'react-native';
-
-
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+} from 'react-native';
 
 const regions = [
   { key: 'us', name: 'United States' },
@@ -11,12 +15,15 @@ const regions = [
 ];
 
 const RegionScreen = ({ navigation, route }) => {
-    const handleRegionSelect = (regionKey) => {
-        console.log('Region Selected:', regionKey);
-        const { userId } = route.params; // Receive userId
-        navigation.navigate('HomeScreen', { region: regionKey, userId });
-      };
-      
+  const { userId } = route.params || {}; // Safely extract userId
+
+  console.log('Received User ID in RegionScreen:', userId);
+
+  const handleRegionSelect = (regionKey) => {
+    console.log('Region Selected:', regionKey);
+    navigation.navigate('HomeScreen', { userId, region: regionKey });
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Select Your Region</Text>

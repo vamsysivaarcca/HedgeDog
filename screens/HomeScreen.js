@@ -11,22 +11,21 @@ import {
 import axios from 'axios';
 
 const HomeScreen = ({ route, navigation }) => {
-  const { region, userId } = route.params || {}; // Destructure userId properly
-
+  const { region, userId } = route.params || {};
+  console.log('Received User ID in HomeScreen:', userId);
   if (!region) {
     return (
       <View style={styles.errorContainer}>
-        <Text style={styles.errorText}>
-          Region not selected. Go back and select a region.
-        </Text>
+        <Text style={styles.errorText}>Region not selected. Go back and select a region.</Text>
       </View>
     );
   }
 
-  const [groupedSports, setGroupedSports] = useState([]);
+  const [sports, setSports] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchGroupedSports = async () => {
+  // Fetch sports and only display their names
+  const fetchSports = async () => {
     try {
       console.log(`Fetching sports for region: ${region}`);
       const response = await axios.get(
@@ -35,12 +34,14 @@ const HomeScreen = ({ route, navigation }) => {
 
       const data = response.data;
 
-      const sports = Object.keys(data).map((sport) => ({
-        title: sport,
-        competitions: data[sport],
-      }));
+      // Extract unique sport names and sort them
+      const uniqueSports = [...new Set(Object.values(data).map((item) => item.group))]
+        .filter((name) => name !== 'Other Sports')
+        .sort((a, b) => a.localeCompare(b));
 
-      setGroupedSports(sports);
+      uniqueSports.push('Other Sports'); // Add "Other Sports" to the end
+
+      setSports(uniqueSports);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching sports:', error.message);
@@ -50,21 +51,21 @@ const HomeScreen = ({ route, navigation }) => {
   };
 
   useEffect(() => {
-    fetchGroupedSports();
+    fetchSports();
   }, [region]);
+
+  // Navigate to the BookmakerScreen when a sport is selected
+  const handleSportSelect = (sport) => {
+    console.log('Selected Sport:', sport);
+    navigation.navigate('BookmakerScreen', { sport, region, userId });
+  };
 
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.item}
-      onPress={() =>
-        navigation.navigate('BookmakerScreen', {
-          sport: item.title,
-          region,
-          userId, // Pass userId forward
-        })
-      }
+      onPress={() => handleSportSelect(item)} // Pass selected sport name
     >
-      <Text style={styles.itemText}>{item.title}</Text>
+      <Text style={styles.itemText}>{item}</Text>
     </TouchableOpacity>
   );
 
@@ -75,8 +76,8 @@ const HomeScreen = ({ route, navigation }) => {
         <ActivityIndicator size="large" color="#007bff" />
       ) : (
         <FlatList
-          data={groupedSports}
-          keyExtractor={(item) => item.title}
+          data={sports}
+          keyExtractor={(item, index) => `${item}-${index}`}
           renderItem={renderItem}
         />
       )}

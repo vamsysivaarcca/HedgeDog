@@ -11,19 +11,18 @@ import {
 import axios from 'axios';
 
 const BookmakerScreen = ({ route, navigation }) => {
-  const { sport, region } = route.params; // Receive sport and region
+  const { sport, region, userId } = route.params;
+  console.log('Received User ID in BookmakerScreen:', userId);
   const [bookmakers, setBookmakers] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch bookmakers based on sport and region
   const fetchBookmakers = async () => {
     try {
       console.log(`Fetching bookmakers for sport: ${sport}, region: ${region}`);
       const response = await axios.get(
         `http://192.168.86.25:8080/api/odds/bookmakers?sport=${sport}&region=${region}`
       );
-
-      setBookmakers(response.data); // Assuming the API returns a list of bookmaker names
+      setBookmakers(response.data);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching bookmakers:', error.message);
@@ -36,19 +35,17 @@ const BookmakerScreen = ({ route, navigation }) => {
     fetchBookmakers();
   }, [sport, region]);
 
-  // Render each bookmaker item
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={styles.item}
-      onPress={() => {
-        console.log('Selected Bookmaker:', item);
-        // Navigate to the competitions screen with the selected bookmaker
+      onPress={() =>
         navigation.navigate('CompetitionsScreen', {
           sport,
           region,
           bookmaker: item,
-        });
-      }}
+          userId,
+        })
+      }
     >
       <Text style={styles.itemText}>{item}</Text>
     </TouchableOpacity>
@@ -59,14 +56,12 @@ const BookmakerScreen = ({ route, navigation }) => {
       <Text style={styles.title}>Select a Bookmaker</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#007bff" />
-      ) : bookmakers.length > 0 ? (
+      ) : (
         <FlatList
           data={bookmakers}
-          keyExtractor={(item, index) => `${item}-${index}`}
+          keyExtractor={(item) => item}
           renderItem={renderItem}
         />
-      ) : (
-        <Text style={styles.noDataText}>No bookmakers found for this sport and region.</Text>
       )}
     </View>
   );
@@ -94,12 +89,6 @@ const styles = StyleSheet.create({
     fontSize: 18,
     color: '#fff',
     textAlign: 'center',
-  },
-  noDataText: {
-    fontSize: 16,
-    color: 'gray',
-    textAlign: 'center',
-    marginTop: 20,
   },
 });
 
