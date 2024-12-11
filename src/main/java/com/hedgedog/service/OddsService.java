@@ -1,12 +1,8 @@
 package com.hedgedog.service;
 
-import com.hedgedog.model.Odds;
-import com.hedgedog.repository.OddsRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -19,133 +15,149 @@ public class OddsService {
 
     private final RestTemplate restTemplate = new RestTemplate();
 
-    // Track dynamically monitored events: User ID -> Event Details
-    private final Map<Long, Map<String, String>> monitoredEvents = new ConcurrentHashMap<>();
-
-    // Temporary cache for events fetched via /live-odds
+    // Cache for fetched events to enable monitoring
     private final Map<String, Map<String, Object>> fetchedEventsCache = new ConcurrentHashMap<>();
 
-    @Autowired
-    private OddsRepository oddsRepository;
+    // Track events being monitored dynamically: User ID -> Event Details
+    private final Map<Long, Map<String, String>> monitoredEvents = new ConcurrentHashMap<>();
 
-    // 1. Fetch All Sports
+    // Fetch all sports
     public List<Map<String, String>> fetchSports() {
         String url = String.format("%s/sports?apiKey=%s", BASE_API_URL, API_KEY);
         List<Map<String, Object>> rawSports = fetchListFromAPI(url);
 
-        List<Map<String, String>> sports = new ArrayList<>();
-        if (rawSports != null) {
-            for (Map<String, Object> sport : rawSports) {
-                Map<String, String> parsedSport = new HashMap<>();
-                parsedSport.put("key", (String) sport.get("key"));
-                parsedSport.put("title", (String) sport.get("title"));
-                sports.add(parsedSport);
-            }
-        }
-        return sports;
+        if (rawSports == null) return Collections.emptyList();
+
+        return rawSports.stream()
+                .map(sport -> Map.of(
+                        "key", (String) sport.get("key"),
+                        "group", (String) sport.get("group"),
+                        "title", (String) sport.get("title")
+                ))
+                .collect(Collectors.toList());
     }
 
-    // 2. Fetch Bookmakers for Sport and Region
+    // Fetch bookmakers for a sport and region
     public Set<String> fetchBookmakers(String sport, String region) {
-        String url = String.format(
-                "%s/sports/%s/odds?apiKey=%s&regions=%s",
-                BASE_API_URL, sport, API_KEY, region
-        );
-
+        String url = String.format("%s/sports/%s/odds?apiKey=%s&regions=%s", BASE_API_URL, sport, API_KEY, region);
         List<Map<String, Object>> oddsData = fetchListFromAPI(url);
-        Set<String> bookmakers = new HashSet<>();
-        if (oddsData != null) {
-            for (Map<String, Object> event : oddsData) {
-                List<Map<String, Object>> bookmakersList = (List<Map<String, Object>>) event.get("bookmakers");
-                if (bookmakersList != null) {
-                    bookmakers.addAll(bookmakersList.stream()
-                            .map(bookmaker -> (String) bookmaker.get("key"))
-                            .collect(Collectors.toSet()));
-                }
-            }
-        }
-        return bookmakers;
+
+        if (oddsData == null) return Collections.emptySet();
+
+        return oddsData.stream()
+                .flatMap(event -> ((List<Map<String, Object>>) event.getOrDefault("bookmakers", Collections.emptyList())).stream())
+                .map(bookmaker -> (String) bookmaker.get("key"))
+                .collect(Collectors.toSet());
     }
 
-    // 3. Fetch Live Odds and Cache Events
+    // Fetch live odds with dynamic markets
     public List<Map<String, Object>> fetchLiveOdds(String sport, String region, String markets, String bookmakers) {
         String url = String.format(
                 "%s/sports/%s/odds?apiKey=%s&regions=%s&markets=%s&bookmakers=%s",
                 BASE_API_URL, sport, API_KEY, region, markets, bookmakers
         );
 
-        System.out.println("Fetching odds with URL: " + url);
         List<Map<String, Object>> oddsData = fetchListFromAPI(url);
 
-        // Cache all events (ensure all valid 'id' fields are cached)
-        fetchedEventsCache.clear();
+        fetchedEventsCache.clear(); // Clear previous cache
         if (oddsData != null) {
-            for (Map<String, Object> event : oddsData) {
+            oddsData.forEach(event -> {
                 String eventId = (String) event.get("id");
-                if (eventId != null && !eventId.isEmpty()) {
-                    fetchedEventsCache.put(eventId.trim(), event);
-                }
-            }
+                if (eventId != null) fetchedEventsCache.put(eventId.trim(), event);
+            });
         }
-        System.out.println("Cached Event IDs: " + fetchedEventsCache.keySet());
 
         return oddsData;
     }
 
-    // 4. Add Event to Monitor
+    // Add event to monitor
     public String addEventToMonitor(Long userId, String eventId, String sport, String region, String markets, String bookmakers) {
-        String trimmedEventId = eventId.trim();
-        if (!fetchedEventsCache.containsKey(trimmedEventId)) {
-            return "Invalid Event ID. Please select a valid event.";
-        }
-
-        Map<String, String> eventDetails = new HashMap<>();
-        eventDetails.put("eventId", trimmedEventId);
-        eventDetails.put("sport", sport);
-        eventDetails.put("region", region);
-        eventDetails.put("markets", markets);
-        eventDetails.put("bookmakers", bookmakers);
+        // Remove reliance on fetchedEventsCache
+        Map<String, String> eventDetails = Map.of(
+                "eventId", eventId,
+                "sport", sport,
+                "region", region,
+                "markets", markets,
+                "bookmakers", bookmakers
+        );
 
         monitoredEvents.put(userId, eventDetails);
-        System.out.println("Started monitoring odds for User ID: " + userId + ", Event ID: " + trimmedEventId);
-        return "Monitoring started for Event ID: " + trimmedEventId;
+        System.out.println("Started monitoring odds for User ID: " + userId + ", Event ID: " + eventId);
+        return "Started monitoring odds for Event ID: " + eventId;
     }
 
-    // 5. Fetch Monitored Odds
-    public void fetchMonitoredOdds() {
-        monitoredEvents.forEach((userId, eventDetails) -> {
-            String url = String.format(
-                    "%s/sports/%s/odds?apiKey=%s&regions=%s&markets=%s&bookmakers=%s",
-                    BASE_API_URL,
-                    eventDetails.get("sport"),
-                    API_KEY,
-                    eventDetails.get("region"),
-                    eventDetails.get("markets"),
-                    eventDetails.get("bookmakers")
-            );
+    // Fetch odds for monitored events
+    public Map<String, Object> fetchMonitoredOdds(Long userId) {
+        Map<String, String> eventDetails = monitoredEvents.get(userId);
 
-            try {
-                List<Map<String, Object>> oddsData = Arrays.asList(restTemplate.getForObject(url, Map[].class));
-                System.out.println("Fetched odds for User ID " + userId + ", Event ID " + eventDetails.get("eventId") + ": " + oddsData);
-            } catch (Exception e) {
-                System.err.println("Error fetching monitored odds for User ID " + userId + ": " + e.getMessage());
-            }
-        });
+        if (eventDetails == null) {
+            return Map.of("message", "No event is being monitored for this user.");
+        }
+
+        String url = String.format(
+                "%s/sports/%s/odds?apiKey=%s&regions=%s&markets=%s&bookmakers=%s",
+                BASE_API_URL, eventDetails.get("sport"), API_KEY,
+                eventDetails.get("region"), eventDetails.get("markets"), eventDetails.get("bookmakers")
+        );
+
+        System.out.println("Fetching odds for User ID: " + userId + ", Event ID: " + eventDetails.get("eventId"));
+        Map<String, Object> oddsResponse = fetchMapFromAPI(url);
+
+        if (oddsResponse == null || oddsResponse.isEmpty()) {
+            return Map.of("message", "No odds available for the monitored event.");
+        }
+
+        return Map.of(
+                "userId", userId,
+                "eventId", eventDetails.get("eventId"),
+                "odds", oddsResponse
+        );
     }
 
-    // 6. Remove Event from Monitoring
-    public void removeEventToMonitor(Long userId) {
-        monitoredEvents.remove(userId);
-        System.out.println("Stopped monitoring odds for User ID: " + userId);
-    }
 
-    // Utility Method: Fetch List from API
+    // Utility method: Fetch list from API
     private List<Map<String, Object>> fetchListFromAPI(String url) {
         try {
             return Arrays.asList(restTemplate.getForObject(url, Map[].class));
         } catch (Exception e) {
             System.err.println("Error fetching data: " + e.getMessage());
             return Collections.emptyList();
+        }
+    }
+
+    public void fetchMonitoredOddsForAllUsers() {
+        monitoredEvents.forEach((userId, eventDetails) -> {
+            String url = String.format(
+                    "%s/sports/%s/odds?apiKey=%s&regions=%s&markets=%s&bookmakers=%s",
+                    BASE_API_URL, eventDetails.get("sport"), API_KEY,
+                    eventDetails.get("region"), eventDetails.get("markets"), eventDetails.get("bookmakers")
+            );
+
+            try {
+                Map<String, Object> oddsData = fetchMapFromAPI(url);
+                System.out.println("Monitored Odds for User ID " + userId + ": " + oddsData);
+            } catch (Exception e) {
+                System.err.println("Failed to fetch monitored odds for User ID " + userId + ": " + e.getMessage());
+            }
+        });
+    }
+
+    public String stopMonitoringEvent(Long userId) {
+        if (monitoredEvents.containsKey(userId)) {
+            monitoredEvents.remove(userId);
+            return "Stopped monitoring odds for User ID: " + userId;
+        } else {
+            return "No event is being monitored for this User ID.";
+        }
+    }
+
+    // Utility method: Fetch map from API
+    private Map<String, Object> fetchMapFromAPI(String url) {
+        try {
+            return restTemplate.getForObject(url, Map.class);
+        } catch (Exception e) {
+            System.err.println("Error fetching monitored odds: " + e.getMessage());
+            return Map.of("error", e.getMessage());
         }
     }
 }
