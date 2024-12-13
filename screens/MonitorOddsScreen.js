@@ -11,6 +11,9 @@ import axios from 'axios';
 const MonitorOddsScreen = ({ route }) => {
   const { userId, selectedTeam, betAmount, eventId } = route.params;
   console.log('Received userId in MonitorOddsScreen:', userId);
+  console.log('Monitored Odds Array:', monitoredOdds);
+  console.log('Selected Team for Prediction:', selectedTeam);
+
 
   const [monitoredOdds, setMonitoredOdds] = useState([]);
   const [safetyStatus, setSafetyStatus] = useState({ percentage: 0, label: 'Loading...' });
