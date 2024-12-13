@@ -50,6 +50,35 @@ public class OddsService {
                 .collect(Collectors.toSet());
     }
 
+    public List<String> fetchMarkets(String sport, String region, String bookmaker) {
+        String url = String.format(
+                "%s/sports/%s/odds?apiKey=%s&regions=%s&bookmakers=%s",
+                BASE_API_URL, sport, API_KEY, region, bookmaker
+        );
+
+        try {
+            // Fetch odds data from the external API
+            List<Map<String, Object>> oddsData = fetchListFromAPI(url);
+
+            // Log the full API response for debugging
+            System.out.println("Full API Response for Markets: " + oddsData);
+
+            // Extract markets dynamically
+            return oddsData.stream()
+                    .flatMap(event -> ((List<Map<String, Object>>) event.getOrDefault("bookmakers", Collections.emptyList())).stream())
+                    .filter(bm -> bookmaker.equals(bm.get("key")))
+                    .flatMap(bm -> ((List<Map<String, Object>>) bm.getOrDefault("markets", Collections.emptyList())).stream())
+                    .map(market -> (String) market.get("key"))
+                    .distinct()
+                    .collect(Collectors.toList());
+
+        } catch (Exception e) {
+            System.err.println("Error fetching markets: " + e.getMessage());
+            return Collections.emptyList();
+        }
+    }
+
+
     // Fetch live odds with dynamic markets
     public List<Map<String, Object>> fetchLiveOdds(String sport, String region, String markets, String bookmakers) {
         String url = String.format(
@@ -57,22 +86,25 @@ public class OddsService {
                 BASE_API_URL, sport, API_KEY, region, markets, bookmakers
         );
 
+        System.out.println("Fetching Live Odds URL: " + url); // Log the request URL for debugging
+
         List<Map<String, Object>> oddsData = fetchListFromAPI(url);
 
-        fetchedEventsCache.clear(); // Clear previous cache
         if (oddsData != null) {
-            oddsData.forEach(event -> {
-                String eventId = (String) event.get("id");
-                if (eventId != null) fetchedEventsCache.put(eventId.trim(), event);
-            });
+            return oddsData; // Return full response data including all markets
         }
 
-        return oddsData;
+        return Collections.emptyList();
     }
+
 
     // Add event to monitor
     public String addEventToMonitor(Long userId, String eventId, String sport, String region, String markets, String bookmakers) {
-        // Remove reliance on fetchedEventsCache
+        // Debug logs
+        System.out.println("Adding event to monitor:");
+        System.out.println("User ID: " + userId + ", Event ID: " + eventId);
+
+        // Add event details
         Map<String, String> eventDetails = Map.of(
                 "eventId", eventId,
                 "sport", sport,
@@ -80,11 +112,14 @@ public class OddsService {
                 "markets", markets,
                 "bookmakers", bookmakers
         );
-
         monitoredEvents.put(userId, eventDetails);
-        System.out.println("Started monitoring odds for User ID: " + userId + ", Event ID: " + eventId);
+
+        // Log the current state of monitoredEvents
+        System.out.println("Current monitoredEvents Map: " + monitoredEvents);
+
         return "Started monitoring odds for Event ID: " + eventId;
     }
+
 
     // Fetch odds for monitored events
     public Map<String, Object> fetchMonitoredOdds(Long userId) {
@@ -118,6 +153,7 @@ public class OddsService {
                         List<Map<String, Object>> markets = (List<Map<String, Object>>) bookmakers.get(0).get("markets");
                         if (markets != null && !markets.isEmpty()) {
                             List<Map<String, Object>> outcomes = (List<Map<String, Object>>) markets.get(0).get("outcomes");
+
 
                             return Map.of(
                                     "userId", userId,

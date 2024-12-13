@@ -23,9 +23,20 @@ public class OddsController {
         return ResponseEntity.ok(sports);
     }
 
+    @GetMapping("/markets")
+    public ResponseEntity<?> getMarkets(@RequestParam String sport, @RequestParam String region, @RequestParam String bookmaker) {
+        try {
+            List<String> markets = oddsService.fetchMarkets(sport, region, bookmaker);
+            return ResponseEntity.ok(markets);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Failed to fetch markets", "details", e.getMessage()));
+        }
+    }
+
+
     // 2. Fetch Bookmakers
     @GetMapping("/bookmakers")
-    public ResponseEntity<?> getBookmakers(@RequestParam String sport, @RequestParam String region) {
+    public ResponseEntity<?> getBookmakers(@RequestParam String sport, @RequestParam String     region) {
         Set<String> bookmakers = oddsService.fetchBookmakers(sport, region);
         return ResponseEntity.ok(bookmakers);
     }
