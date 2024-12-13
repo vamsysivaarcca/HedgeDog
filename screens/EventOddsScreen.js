@@ -12,9 +12,8 @@ import {
 import axios from 'axios';
 
 const EventOddsScreen = ({ route, navigation }) => {
-  const { userId, eventId, sport, region, bookmaker } = route.params;
-  console.log('Received userId in EventOddsScreen:', userId);
-
+  const { userId, eventId, sport, region, bookmaker, market } = route.params;
+  console.log('Received userId on EventOddsScreen:', userId);
   const [odds, setOdds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedTeam, setSelectedTeam] = useState(null);
@@ -23,9 +22,9 @@ const EventOddsScreen = ({ route, navigation }) => {
   // Fetch odds for the selected event
   const fetchOdds = async () => {
     try {
-      console.log('Fetching Odds:', { eventId, sport, region, bookmaker });
+      console.log('Fetching Odds:', { eventId, sport, region, bookmaker, market });
       const response = await axios.get(
-        `http://192.168.86.25:8080/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=h2h`
+        `http://192.168.86.25:8080/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
       );
 
       console.log('Full API Response:', response.data);
@@ -33,7 +32,7 @@ const EventOddsScreen = ({ route, navigation }) => {
       // Find the selected event and outcomes
       const selectedEvent = response.data?.find((e) => e.id === eventId);
       const outcomes =
-        selectedEvent?.bookmakers?.[0]?.markets?.[0]?.outcomes || [];
+        selectedEvent?.bookmakers?.[0]?.markets?.find((m) => m.key === market)?.outcomes || [];
 
       setOdds(outcomes);
     } catch (error) {
@@ -48,54 +47,42 @@ const EventOddsScreen = ({ route, navigation }) => {
     fetchOdds();
   }, []);
 
-  const handleMonitorOdds = async () => {
+  // Monitor odds function
+  const handleMonitorOdds = () => {
     if (!selectedTeam) {
-      showToast("Please select a team to monitor.");
+      showToast('Please select a team or market option to monitor.');
       return;
     }
+
     if (!betAmount || isNaN(betAmount) || betAmount <= 0) {
-      showToast("Please enter a valid bet amount.");
+      showToast('Please enter a valid bet amount.');
       return;
     }
-  
-    try {
-      const response = await axios.get(
-        `http://192.168.86.25:8080/api/odds/monitor`,
-        {
-          params: {
-            userId,
-            eventId,
-            sport,
-            region,
-            markets: "h2h",
-            bookmakers: bookmaker,
-          },
-        }
-      );
-  
-      if (response.data.message.includes("Started monitoring")) {
-        navigation.navigate("MonitorOddsScreen", {
-          userId,
-          selectedTeam,
-          betAmount,
-          eventId,
-        });
-      } else {
-        Alert.alert("Error", "Failed to start monitoring the event.");
-      }
-    } catch (error) {
-      console.error("Error monitoring odds:", error.message);
-      Alert.alert("Error", "Failed to monitor odds. Please try again.");
-    }
+
+    console.log('Monitoring Odds with:', {
+      userId,
+      selectedTeam,
+      market,
+      betAmount,
+      odds: odds.find((o) => o.name === selectedTeam)?.price || 0,
+    });
+
+    // Navigate to MonitorOddsScreen
+    navigation.navigate('MonitorOddsScreen', {
+      userId,
+      eventId,
+      selectedTeam,
+      betAmount,
+      odds: odds.find((o) => o.name === selectedTeam)?.price || 0,
+    });
   };
-  
 
   // Toast-style in-app notification
   const showToast = (message) => {
     Alert.alert('Notification', message, [{ text: 'OK' }]);
   };
 
-  // Render odds list with selectable teams
+  // Render odds list with selectable teams/markets
   const renderItem = ({ item }) => (
     <TouchableOpacity
       style={[
@@ -111,7 +98,7 @@ const EventOddsScreen = ({ route, navigation }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Select a Team & Enter Bet Amount</Text>
+      <Text style={styles.title}>Select a Team/Market & Enter Bet Amount</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#007bff" />
       ) : odds.length > 0 ? (
@@ -132,7 +119,13 @@ const EventOddsScreen = ({ route, navigation }) => {
         onChangeText={setBetAmount}
       />
 
-      <TouchableOpacity style={styles.monitorButton} onPress={handleMonitorOdds}>
+      <TouchableOpacity
+        style={[
+          styles.monitorButton,
+          (!selectedTeam || !betAmount) && { backgroundColor: '#ccc' },
+        ]}
+        onPress={handleMonitorOdds}
+      >
         <Text style={styles.buttonText}>Monitor Odds</Text>
       </TouchableOpacity>
     </View>
