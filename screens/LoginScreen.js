@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
+import Toast from 'react-native-toast-message';
+
 
 const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
@@ -14,23 +16,34 @@ const LoginScreen = ({ navigation }) => {
         { params: { username, password } }
       );
   
-      console.log('Login Response:', response.data); // Add this log
-  
       const { userId, status } = response.data;
   
-      console.log('Extracted User ID:', userId); // Confirm userId is extracted
-  
       if (status === 'Login Successful') {
-        console.log('Login Successful, User ID:', userId);
+        console.log('User ID:', userId);
   
-        // Navigate to the RegionScreen and pass userId
+        // Display toast notification
+        Toast.show({
+          type: 'success',
+          text1: 'Login Successful',
+          text2: `Welcome back, ${username}! 🎉`,
+        });
+  
+        // Navigate to RegionScreen
         navigation.navigate('RegionScreen', { userId });
       } else {
-        Alert.alert('Error', 'Invalid credentials');
+        Toast.show({
+          type: 'error',
+          text1: 'Login Failed',
+          text2: 'Invalid credentials. Please try again.',
+        });
       }
     } catch (error) {
       console.error('Login Error:', error.message);
-      Alert.alert('Error', 'Failed to log in');
+      Toast.show({
+        type: 'error',
+        text1: 'Error',
+        text2: 'Failed to log in. Please try again.',
+      });
     }
   };
   
