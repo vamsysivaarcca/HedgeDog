@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 @Service
 public class OddsService {
 
-    private static final String API_KEY = "8e34ba8cb7d825726fd7d790005b0d36";
+    private static final String API_KEY = "47f455138d53715ad83d4a84ae9658ee";
     private static final String BASE_API_URL = "https://api.the-odds-api.com/v4";
 
     private final RestTemplate restTemplate = new RestTemplate();
@@ -100,19 +100,42 @@ public class OddsService {
                 eventDetails.get("region"), eventDetails.get("markets"), eventDetails.get("bookmakers")
         );
 
-        System.out.println("Fetching odds for User ID: " + userId + ", Event ID: " + eventDetails.get("eventId"));
-        Map<String, Object> oddsResponse = fetchMapFromAPI(url);
+        try {
+            System.out.println("Fetching Monitored Odds: " + url); // Log the URL
+            Map<String, Object>[] oddsData = restTemplate.getForObject(url, Map[].class);
 
-        if (oddsResponse == null || oddsResponse.isEmpty()) {
+            System.out.println("API Response: " + Arrays.toString(oddsData)); // Log API Response
+
+            if (oddsData != null && oddsData.length > 0) {
+                Map<String, Object> selectedEvent = Arrays.stream(oddsData)
+                        .filter(e -> eventDetails.get("eventId").equals(e.get("id")))
+                        .findFirst()
+                        .orElse(null);
+
+                if (selectedEvent != null) {
+                    List<Map<String, Object>> bookmakers = (List<Map<String, Object>>) selectedEvent.get("bookmakers");
+                    if (bookmakers != null && !bookmakers.isEmpty()) {
+                        List<Map<String, Object>> markets = (List<Map<String, Object>>) bookmakers.get(0).get("markets");
+                        if (markets != null && !markets.isEmpty()) {
+                            List<Map<String, Object>> outcomes = (List<Map<String, Object>>) markets.get(0).get("outcomes");
+
+                            return Map.of(
+                                    "userId", userId,
+                                    "eventId", eventDetails.get("eventId"),
+                                    "odds", outcomes
+                            );
+                        }
+                    }
+                }
+            }
             return Map.of("message", "No odds available for the monitored event.");
+        } catch (Exception e) {
+            System.err.println("Error fetching monitored odds: " + e.getMessage());
+            e.printStackTrace(); // Print full stack trace for debugging
+            return Map.of("error", "Failed to fetch odds", "details", e.getMessage());
         }
-
-        return Map.of(
-                "userId", userId,
-                "eventId", eventDetails.get("eventId"),
-                "odds", oddsResponse
-        );
     }
+
 
 
     // Utility method: Fetch list from API

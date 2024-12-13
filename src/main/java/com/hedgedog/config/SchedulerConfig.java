@@ -14,7 +14,7 @@ public class SchedulerConfig {
     private OddsService oddsService;
 
     // Scheduler to fetch odds for monitored events every 10 seconds
-    @Scheduled(fixedRate = 10000000)
+    @Scheduled(fixedRate = 250000)
     public void monitorOdds() {
         System.out.println("Running scheduled task: Fetch Monitored Odds");
 
