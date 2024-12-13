@@ -3,65 +3,95 @@ import {
   View,
   Text,
   FlatList,
-  ActivityIndicator,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
   Alert,
 } from 'react-native';
 import axios from 'axios';
 
 const CompetitionsScreen = ({ route, navigation }) => {
   const { sport, region, bookmaker, market, userId } = route.params;
-  console.log('Received userId on the CompetitionsScreen:', userId);
+  console.log('Received params in CompetitionsScreen:', { sport, region, bookmaker, market, userId });
+  
   const [competitions, setCompetitions] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchCompetitions();
-  }, []);
-
+  // Fetch events (competitions) with odds
   const fetchCompetitions = async () => {
     try {
+      console.log('Fetching competitions with params:', {
+        sport,
+        region,
+        bookmaker,
+        market,
+      });
+
       const response = await axios.get(
         `http://192.168.86.25:8080/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
       );
 
-      // Group events by competition
-      const groupedCompetitions = response.data.reduce((acc, event) => {
-        const competition = event.sport_title || 'Unknown Competition';
-        if (!acc[competition]) acc[competition] = [];
-        acc[competition].push(event);
-        return acc;
-      }, {});
+      console.log('Raw Events Response:', response.data);
 
-      setCompetitions(Object.entries(groupedCompetitions));
+      const groupedEvents = groupByCompetition(response.data);
+      setCompetitions(groupedEvents);
     } catch (error) {
       console.error('Error fetching competitions:', error.message);
-      Alert.alert('Error', 'Failed to fetch competitions.');
+      Alert.alert('Error', 'Failed to fetch competitions. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSelectEvent = (event) => {
-    const availableMarkets = event.bookmakers?.[0]?.markets || [];
-    console.log('Available Markets:', availableMarkets);
-  
-    const spreads = availableMarkets.find((m) => m.key === 'spreads');
-    const totals = availableMarkets.find((m) => m.key === 'totals');
-    const h2h = availableMarkets.find((m) => m.key === 'h2h');
-  
+  // Group events by sport_title
+  const groupByCompetition = (events) => {
+    const grouped = {};
+    events.forEach((event) => {
+      const competitionName = event.sport_title || 'Others';
+      if (!grouped[competitionName]) {
+        grouped[competitionName] = [];
+      }
+      grouped[competitionName].push(event);
+    });
+    return grouped;
+  };
+
+  useEffect(() => {
+    fetchCompetitions();
+  }, [sport, region, bookmaker, market]);
+
+  const handleEventSelect = (event) => {
+    console.log('Selected Event:', event);
     navigation.navigate('EventOddsScreen', {
-      userId,
-      sport,
-      market,
       eventId: event.id,
-      spreads: spreads?.outcomes || [],
-      totals: totals?.outcomes || [],
-      h2h: h2h?.outcomes || [],
+      sport,
+      region,
+      bookmaker,
+      market,
+      userId,
     });
   };
-  
+
+  const renderCompetition = ({ item }) => {
+    const [competitionName, events] = item;
+    return (
+      <View style={styles.competitionSection}>
+        <Text style={styles.competitionTitle}>{competitionName}</Text>
+        {events.map((event) => (
+          <TouchableOpacity
+            key={event.id}
+            style={styles.eventItem}
+            onPress={() => handleEventSelect(event)}
+          >
+            <Text style={styles.eventText}>
+              {event.home_team} vs {event.away_team}
+            </Text>
+            <Text style={styles.subText}>Commence Time: {event.commence_time}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+    );
+  };
 
   return (
     <View style={styles.container}>
@@ -70,24 +100,9 @@ const CompetitionsScreen = ({ route, navigation }) => {
         <ActivityIndicator size="large" color="#007bff" />
       ) : (
         <FlatList
-          data={competitions}
+          data={Object.entries(competitions)} // Convert grouped data into array
           keyExtractor={(item) => item[0]}
-          renderItem={({ item }) => (
-            <View style={styles.competitionContainer}>
-              <Text style={styles.competitionTitle}>{item[0]}</Text>
-              {item[1].map((event) => (
-                <TouchableOpacity
-                  key={event.id}
-                  style={styles.item}
-                  onPress={() => handleSelectEvent(event)}
-                >
-                  <Text style={styles.itemText}>
-                    {event.home_team} vs {event.away_team}
-                  </Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-          )}
+          renderItem={renderCompetition}
         />
       )}
     </View>
@@ -96,16 +111,17 @@ const CompetitionsScreen = ({ route, navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
-  competitionContainer: { marginBottom: 15 },
-  competitionTitle: { fontSize: 20, fontWeight: '600', marginBottom: 10 },
-  item: {
-    padding: 10,
-    backgroundColor: '#007bff',
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
+  competitionSection: { marginBottom: 20 },
+  competitionTitle: { fontSize: 20, fontWeight: 'bold', color: '#007bff', marginBottom: 10 },
+  eventItem: {
+    padding: 15,
     marginVertical: 5,
+    backgroundColor: '#e9ecef',
     borderRadius: 8,
   },
-  itemText: { color: '#fff', fontSize: 16, textAlign: 'center' },
+  eventText: { fontSize: 16, color: '#333', textAlign: 'center' },
+  subText: { fontSize: 14, color: 'gray', textAlign: 'center' },
 });
 
 export default CompetitionsScreen;
