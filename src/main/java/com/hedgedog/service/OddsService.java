@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 @Service
 public class OddsService {
 
-    private static final String API_KEY = "47f455138d53715ad83d4a84ae9658ee";
+    private static final String API_KEY = "c75c856976a011b4fbfc59c0c62ab8e2";
     private static final String BASE_API_URL = "https://api.the-odds-api.com/v4";
 
     private final RestTemplate restTemplate = new RestTemplate();
