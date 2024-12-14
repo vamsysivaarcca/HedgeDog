@@ -1,5 +1,8 @@
 package com.hedgedog.service;
 
+import com.hedgedog.model.MonitoredEvent;
+import com.hedgedog.repository.MonitoredEventRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
@@ -9,6 +12,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class OddsService {
+    @Autowired
+    private MonitoredEventRepository monitoredEventRepository;
 
     private static final String API_KEY = "c75c856976a011b4fbfc59c0c62ab8e2";
     private static final String BASE_API_URL = "https://api.the-odds-api.com/v4";
@@ -104,6 +109,15 @@ public class OddsService {
         System.out.println("Adding event to monitor:");
         System.out.println("User ID: " + userId + ", Event ID: " + eventId);
 
+        MonitoredEvent monitoredEvent = new MonitoredEvent();
+        monitoredEvent.setUserId(userId);
+        monitoredEvent.setEventId(eventId);
+        monitoredEvent.setSport(sport);
+        monitoredEvent.setRegion(region);
+        monitoredEvent.setMarkets(markets);
+        monitoredEvent.setBookmakers(bookmakers);
+        monitoredEventRepository.save(monitoredEvent);
+
         // Add event details
         Map<String, String> eventDetails = Map.of(
                 "eventId", eventId,
@@ -123,16 +137,17 @@ public class OddsService {
 
     // Fetch odds for monitored events
     public Map<String, Object> fetchMonitoredOdds(Long userId) {
-        Map<String, String> eventDetails = monitoredEvents.get(userId);
+        List<MonitoredEvent> eventDetailsList = monitoredEventRepository.findByUserId(userId);
+        MonitoredEvent eventDetails = eventDetailsList.get(0);
 
-        if (eventDetails == null) {
+        if (eventDetailsList == null) {
             return Map.of("message", "No event is being monitored for this user.");
         }
 
         String url = String.format(
                 "%s/sports/%s/odds?apiKey=%s&regions=%s&markets=%s&bookmakers=%s",
-                BASE_API_URL, eventDetails.get("sport"), API_KEY,
-                eventDetails.get("region"), eventDetails.get("markets"), eventDetails.get("bookmakers")
+                BASE_API_URL, eventDetails.getSport(), API_KEY,
+                eventDetails.getRegion(), eventDetails.getMarkets(), eventDetails.getBookmakers()
         );
 
         try {
@@ -143,7 +158,7 @@ public class OddsService {
 
             if (oddsData != null && oddsData.length > 0) {
                 Map<String, Object> selectedEvent = Arrays.stream(oddsData)
-                        .filter(e -> eventDetails.get("eventId").equals(e.get("id")))
+                        .filter(e -> eventDetails.getEventId().equals(e.get("id")))
                         .findFirst()
                         .orElse(null);
 
@@ -157,7 +172,7 @@ public class OddsService {
 
                             return Map.of(
                                     "userId", userId,
-                                    "eventId", eventDetails.get("eventId"),
+                                    "eventId", eventDetails.getEventId(),
                                     "odds", outcomes
                             );
                         }
