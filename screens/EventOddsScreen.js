@@ -13,6 +13,7 @@ import axios from 'axios';
 
 const EventOddsScreen = ({ route, navigation }) => {
   const { sport, region, bookmaker, market, userId, eventId } = route.params;
+  console.log('Received route params on the EventOddsScreen:', route.params);
 
   const [marketsData, setMarketsData] = useState([]); // Store all markets dynamically
   const [loading, setLoading] = useState(true);
@@ -57,32 +58,57 @@ const EventOddsScreen = ({ route, navigation }) => {
   }, []);
 
   // Handle navigation to MonitorOddsScreen
-  const handleMonitorOdds = () => {
+  const handleMonitorOdds = async () => {
     if (!selectedOutcome) {
       Alert.alert('Error', 'Please select a team or outcome to monitor.');
       return;
     }
-
+  
     if (!betAmount || isNaN(betAmount) || parseFloat(betAmount) <= 0) {
       Alert.alert('Error', 'Please enter a valid bet amount.');
       return;
     }
-
-    console.log('Navigating with:', {
+  
+    console.log('Starting to monitor odds:', {
       userId,
       eventId,
+      sport,
+      region,
+      market,
+      bookmaker,
       selectedOutcome,
       betAmount,
     });
-
-    navigation.navigate('MonitorOddsScreen', {
-      userId,
-      eventId,
-      selectedTeam: selectedOutcome,
-      betAmount,
-    });
+  
+    try {
+      // Make a GET request to match the backend's parameter structure
+      const response = await axios.get('http://192.168.86.25:8080/api/odds/monitor', {
+        params: {
+          userId,
+          eventId,
+          sport,
+          region,
+          markets: market, // Ensure "markets" key matches backend
+          bookmakers: bookmaker, // Ensure "bookmakers" matches backend
+        },
+      });
+  
+      console.log('Monitor API Response:', response.data);
+  
+      // Navigate to MonitorOddsScreen only after the API succeeds
+      navigation.navigate('MonitorOddsScreen', {
+        userId,
+        eventId,
+        selectedTeam: selectedOutcome,
+        betAmount,
+      });
+    } catch (error) {
+      console.error('Error starting monitor:', error.message);
+      Alert.alert('Error', 'Failed to monitor odds. Please try again.');
+    }
   };
-
+  
+  
 
   
   // Render outcomes for a market
