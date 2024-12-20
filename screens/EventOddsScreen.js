@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Alert,
   TextInput,
+  Button,
 } from 'react-native';
 import axios from 'axios';
 
@@ -19,6 +20,7 @@ const EventOddsScreen = ({ route, navigation }) => {
   const [loading, setLoading] = useState(true);
   const [selectedOutcome, setSelectedOutcome] = useState(null); // Selected team/outcome
   const [betAmount, setBetAmount] = useState(''); // Bet amount input
+  const [adjustedOdds, setAdjustedOdds] = useState(0); // Adjustable odds
 
   // Fetch odds data dynamically
   const fetchEventOdds = async () => {
@@ -45,6 +47,12 @@ const EventOddsScreen = ({ route, navigation }) => {
       const markets = selectedEvent.bookmakers[0]?.markets || [];
       console.log('Fetched Markets Data:', markets);
       setMarketsData(markets);
+
+      // Set the initial odds
+      const firstOutcome = markets[0]?.outcomes[0];
+      if (firstOutcome) {
+        setAdjustedOdds(firstOutcome.price); // Initialize odds
+      }
     } catch (error) {
       console.error('Error fetching odds:', error.message);
       Alert.alert('Error', 'Failed to fetch event odds.');
@@ -57,18 +65,25 @@ const EventOddsScreen = ({ route, navigation }) => {
     fetchEventOdds();
   }, []);
 
+  const adjustOdds = (direction) => {
+    setAdjustedOdds((prevOdds) => {
+      let newOdds = direction === 'up' ? prevOdds + 0.1 : prevOdds - 0.1;
+      return Math.max(1, Math.min(newOdds, 100)); // Keep odds in range [1, 100]
+    });
+  };
+
   // Handle navigation to MonitorOddsScreen
   const handleMonitorOdds = async () => {
     if (!selectedOutcome) {
       Alert.alert('Error', 'Please select a team or outcome to monitor.');
       return;
     }
-  
+
     if (!betAmount || isNaN(betAmount) || parseFloat(betAmount) <= 0) {
       Alert.alert('Error', 'Please enter a valid bet amount.');
       return;
     }
-  
+
     console.log('Starting to monitor odds:', {
       userId,
       eventId,
@@ -77,25 +92,26 @@ const EventOddsScreen = ({ route, navigation }) => {
       market,
       bookmaker,
       selectedOutcome,
+      adjustedOdds,
       betAmount,
     });
-  
+
     try {
-      // Make a GET request to match the backend's parameter structure
       const response = await axios.get('http://192.168.86.25:8080/api/odds/monitor', {
         params: {
           userId,
           eventId,
           sport,
           region,
-          markets: market, // Ensure "markets" key matches backend
-          bookmakers: bookmaker, // Ensure "bookmakers" matches backend
+          markets: market,
+          bookmakers: bookmaker,
+          team: selectedOutcome,
+          initialOdds: adjustedOdds,
+          betAmount: betAmount,
         },
       });
-  
+
       console.log('Monitor API Response:', response.data);
-  
-      // Navigate to MonitorOddsScreen only after the API succeeds
       navigation.navigate('MonitorOddsScreen', {
         userId,
         eventId,
@@ -107,11 +123,7 @@ const EventOddsScreen = ({ route, navigation }) => {
       Alert.alert('Error', 'Failed to monitor odds. Please try again.');
     }
   };
-  
-  
 
-  
-  // Render outcomes for a market
   const renderMarketSection = ({ item }) => {
     const { key, outcomes } = item;
     return (
@@ -124,7 +136,10 @@ const EventOddsScreen = ({ route, navigation }) => {
               styles.outcomeItem,
               selectedOutcome === outcome.name && { backgroundColor: '#28a745' },
             ]}
-            onPress={() => setSelectedOutcome(outcome.name)}
+            onPress={() => {
+              setSelectedOutcome(outcome.name);
+              setAdjustedOdds(outcome.price);
+            }}
           >
             <Text style={styles.outcomeText}>
               {outcome.name}: {outcome.price}
@@ -149,6 +164,13 @@ const EventOddsScreen = ({ route, navigation }) => {
           renderItem={renderMarketSection}
           ListHeaderComponent={
             <>
+              <Text style={styles.inputLabel}>Adjust Odds</Text>
+              <View style={styles.adjustOddsContainer}>
+                <Button title="-" onPress={() => adjustOdds('down')} />
+                <Text style={styles.adjustedOddsText}>{adjustedOdds.toFixed(2)}</Text>
+                <Button title="+" onPress={() => adjustOdds('up')} />
+              </View>
+
               <Text style={styles.inputLabel}>Enter Bet Amount</Text>
               <TextInput
                 style={styles.input}
@@ -179,46 +201,18 @@ const EventOddsScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
-  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
-  marketSection: {
-    marginBottom: 20,
-    backgroundColor: '#e9ecef',
-    padding: 10,
-    borderRadius: 8,
-  },
-  marketTitle: { fontSize: 20, fontWeight: 'bold', color: '#007bff', marginBottom: 10 },
-  outcomeItem: {
-    marginVertical: 5,
-    padding: 10,
-    backgroundColor: '#007bff',
-    borderRadius: 8,
-  },
-  outcomeText: { fontSize: 16, color: '#fff', textAlign: 'center' },
-  inputLabel: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, textAlign: 'center' },
-  input: {
-    height: 50,
-    borderColor: '#ccc',
-    borderWidth: 1,
-    marginBottom: 20,
-    paddingHorizontal: 15,
-    borderRadius: 25,
-    fontSize: 18,
-    backgroundColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  monitorButton: {
-    padding: 15,
-    backgroundColor: '#28a745',
-    borderRadius: 8,
+  // Existing styles
+  adjustOddsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 20,
   },
-  buttonText: { fontSize: 18, color: '#fff', fontWeight: 'bold' },
-  noDataText: { fontSize: 18, color: 'gray', textAlign: 'center', marginTop: 20 },
+  adjustedOddsText: {
+    fontSize: 20,
+    marginHorizontal: 20,
+    fontWeight: 'bold',
+  },
 });
 
 export default EventOddsScreen;
