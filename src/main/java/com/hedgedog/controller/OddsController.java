@@ -53,15 +53,21 @@ public class OddsController {
 
     // 4. Add Event to Monitor
     @GetMapping("/monitor")
-    public ResponseEntity<?> addEventToMonitor(@RequestParam Long userId,
-                                               @RequestParam String eventId,
-                                               @RequestParam String sport,
-                                               @RequestParam String region,
-                                               @RequestParam String markets,
-                                               @RequestParam String bookmakers) {
-        String message = oddsService.addEventToMonitor(userId, eventId, sport, region, markets, bookmakers);
+    public ResponseEntity<?> addEventToMonitor(
+            @RequestParam Long userId,
+            @RequestParam String eventId,
+            @RequestParam String sport,
+            @RequestParam String region,
+            @RequestParam String markets,
+            @RequestParam String bookmakers,
+            @RequestParam String team,
+            @RequestParam double initialOdds,
+            @RequestParam double betAmount
+    ) {
+        String message = oddsService.addEventToMonitor(userId, eventId, sport, region, markets, bookmakers, team, initialOdds, betAmount);
         return ResponseEntity.ok(Map.of("message", message));
     }
+
 
     // Stop monitoring odds for a user
     @DeleteMapping("/stop-monitor")
@@ -77,4 +83,26 @@ public class OddsController {
         return ResponseEntity.ok(odds);
     }
 
+
+    @GetMapping("/fetch-monitored-odds-with-hedge")
+    public ResponseEntity<?> fetchMonitoredOddsWithHedge(
+            @RequestParam Long userId,
+            @RequestParam double currentBet
+    ) {
+        try {
+            Map<String, Object> response = oddsService.fetchMonitoredOddsWithHedge(userId, currentBet);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+
+    @GetMapping("/fetch-hedge-suggestions")
+    public ResponseEntity<?> fetchHedgeSuggestions(@RequestParam Long userId) {
+        Map<String, Object> hedgeSuggestions = oddsService.getLatestHedgeSuggestions(userId);
+        return ResponseEntity.ok(hedgeSuggestions);
+    }
 }
+
+
