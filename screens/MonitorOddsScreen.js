@@ -1,165 +1,150 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  Alert,
-  ActivityIndicator,
-} from 'react-native';
+import { View, Text, StyleSheet, ActivityIndicator, FlatList, Alert } from 'react-native';
 import axios from 'axios';
 
 const MonitorOddsScreen = ({ route }) => {
-  const { userId, selectedTeam, betAmount, eventId } = route.params;
-  console.log('Received userId in MonitorOddsScreen:', userId);
-  console.log('Monitored Odds Array:', monitoredOdds);
-  console.log('Selected Team for Prediction:', selectedTeam);
+  const { userId, eventId, selectedTeam, betAmount } = route.params;
 
-
-  const [monitoredOdds, setMonitoredOdds] = useState([]);
-  const [safetyStatus, setSafetyStatus] = useState({ percentage: 0, label: 'Loading...' });
   const [loading, setLoading] = useState(true);
+  const [oddsData, setOddsData] = useState(null);
+  const [error, setError] = useState(null);
+  const [safetyPercentage, setSafetyPercentage] = useState(0); // State for risk percentage
 
-  // Fetch monitored odds
-  const fetchMonitoredOdds = async () => {
+  // Poll the API every 25 seconds
+  const fetchOddsWithHedge = async () => {
     try {
-      console.log('Fetching monitored odds...');
       const response = await axios.get(
-        `http://192.168.86.25:8080/api/odds/fetch-monitored-odds?userId=${userId}`
+        'http://192.168.86.25:8080/api/odds/fetch-monitored-odds-with-hedge',
+        {
+          params: { userId: userId, currentBet: betAmount },
+        }
       );
 
-      if (response.data.message) {
-        Alert.alert('Info', response.data.message);
-      } else {
-        console.log('Fetched Monitored Odds:', response.data.odds);
-        setMonitoredOdds(response.data.odds || []);
-        calculateSafety(response.data.odds);
-      }
-    } catch (error) {
-      console.error('Error fetching monitored odds:', error.message);
-      Alert.alert('Error', 'Failed to fetch monitored odds.');
-    }
-  };
+      setOddsData(response.data);
 
-  
+      // Call the predict_safety API for risk percentage
+      const safetyResponse = await axios.post(
+        'http://192.168.86.25:5001/predict_safety',
+        { odds: [response.data.latestOddsSelectedTeam] }
+      );
+      setSafetyPercentage(safetyResponse.data.predictions[0].safety);
 
-  // Calculate safety percentage
-  const calculateSafety = async (odds) => {
-    try {
-      const teamOdds = odds?.find((o) => o.name === selectedTeam)?.price || 0;
-
-      console.log('Sending odds to AI for safety prediction:', teamOdds);
-      const response = await axios.post('http://192.168.86.25:5001/predict_safety', {
-        odds: [teamOdds],
-      });
-
-      const safetyPercentage = response.data.predictions[0]?.safety || 0;
-      console.log('Safety Response:', response.data);
-
-      const label = getSafetyLabel(safetyPercentage);
-      setSafetyStatus({ percentage: safetyPercentage, label });
-    } catch (error) {
-      console.error('Error calculating safety:', error.message);
-      Alert.alert('Error', 'Failed to calculate safety status.');
-    } finally {
+      setError(null);
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching odds or safety:', err.message);
+      setError('Failed to fetch odds or safety. Please try again.');
       setLoading(false);
     }
   };
 
-  // Determine safety label
-  const getSafetyLabel = (percentage) => {
-    if (percentage > 80) return 'Very Safe';
-    if (percentage > 60) return 'Safe';
-    if (percentage > 40) return 'At Risk';
-    if (percentage > 20) return 'High Risk';
-    return 'Very High Risk';
-  };
-
   useEffect(() => {
-    fetchMonitoredOdds();
+    fetchOddsWithHedge(); // Initial call
+    const interval = setInterval(fetchOddsWithHedge, 25000); // Poll every 25 seconds
 
-    // Refresh odds every 25 seconds
-    const interval = setInterval(fetchMonitoredOdds, 25000);
-    return () => clearInterval(interval);
+    return () => clearInterval(interval); // Cleanup on unmount
   }, []);
 
-  const renderProgressBar = () => {
-    const progressColor =
-      safetyStatus.percentage > 80 ? '#28a745' : // Dark Green
-      safetyStatus.percentage > 60 ? '#85e085' : // Light Green
-      safetyStatus.percentage > 40 ? '#ffc107' : // Amber
-      safetyStatus.percentage > 20 ? '#ff8566' : // Light Red
-      '#dc3545'; // Dark Red
+  const getSafetyColor = (percentage) => {
+    if (percentage >= 90) return 'green';
+    if (percentage >= 80) return 'lightgreen';
+    if (percentage >= 65) return 'orange';
+    return 'red';
+  };
+
+  const getSafetyStatus = (percentage) => {
+    if (percentage >= 90) return 'Very Safe';
+    if (percentage >= 80) return 'Safe';
+    if (percentage >= 65) return 'Hanging In';
+    return 'At Risk';
+  };
+
+  const renderOddsData = () => {
+    if (!oddsData) return null;
+
+    const {
+      latestOddsSelectedTeam,
+      latestOddsOppositeTeam,
+      hedgingResult: { hedgeAmount, profit, hedgeTeam },
+    } = oddsData;
 
     return (
-      <View style={styles.progressBarContainer}>
-        <View
-          style={[
-            styles.progressBar,
-            { width: `${safetyStatus.percentage}%`, backgroundColor: progressColor },
-          ]}
-        >
-          <Text style={styles.progressText}>{`${safetyStatus.percentage.toFixed(2)}%`}</Text>
+      <View>
+        <Text style={styles.header}>Live Odds</Text>
+        <Text style={styles.text}>
+          Selected Team Odds: <Text style={styles.bold}>{latestOddsSelectedTeam}</Text>
+        </Text>
+        <Text style={styles.text}>
+          Opposite Team Odds: <Text style={styles.bold}>{latestOddsOppositeTeam}</Text>
+        </Text>
+
+        <Text style={styles.header}>Hedging Suggestion</Text>
+        <Text style={styles.text}>
+          Hedge Team: <Text style={styles.bold}>{hedgeTeam}</Text>
+        </Text>
+        <Text style={styles.text}>
+          Hedge Amount: <Text style={styles.bold}>${hedgeAmount.toFixed(2)}</Text>
+        </Text>
+        <Text style={styles.text}>
+          Profit: <Text style={[styles.bold, profit >= 0 ? styles.profit : styles.loss]}>
+            ${profit.toFixed(2)}
+          </Text>
+        </Text>
+
+        {/* Risk Percentage Bar */}
+        <Text style={styles.header}>Safety Percentage</Text>
+        <View style={styles.progressBar}>
+          <View
+            style={{
+              width: `${safetyPercentage}%`,
+              backgroundColor: getSafetyColor(safetyPercentage),
+              height: '100%',
+              borderRadius: 10,
+            }}
+          />
         </View>
+        <Text style={styles.safetyText}>
+          {safetyPercentage.toFixed(2)}% - {getSafetyStatus(safetyPercentage)}
+        </Text>
       </View>
     );
   };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Monitoring Odds</Text>
-      <Text style={styles.subtitle}>Bet: {selectedTeam} | Amount: ${betAmount}</Text>
-
+      <Text style={styles.title}>Monitor Odds</Text>
       {loading ? (
         <ActivityIndicator size="large" color="#007bff" />
+      ) : error ? (
+        <Text style={styles.error}>{error}</Text>
       ) : (
-        <>
-          <Text style={styles.eventHeader}>
-            Event Odds:
-          </Text>
-          {monitoredOdds.length > 0 ? (
-            monitoredOdds.map((team, index) => (
-              <View key={index} style={styles.oddsItem}>
-                <Text style={styles.teamText}>
-                  {team.name}: {team.price}
-                </Text>
-              </View>
-            ))
-          ) : (
-            <Text style={styles.noDataText}>No odds available.</Text>
-          )}
-
-          {renderProgressBar()}
-          <Text style={styles.safetyLabel}>{safetyStatus.label}</Text>
-        </>
+        renderOddsData()
       )}
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20, backgroundColor: '#f5f5f5' },
-  title: { fontSize: 22, fontWeight: 'bold', textAlign: 'center', marginBottom: 10 },
-  subtitle: { fontSize: 18, textAlign: 'center', marginBottom: 20, color: '#555' },
-  eventHeader: { fontSize: 20, fontWeight: '600', textAlign: 'center', marginBottom: 10 },
-  oddsItem: {
-    backgroundColor: '#e9ecef',
-    padding: 10,
-    marginVertical: 5,
-    borderRadius: 8,
-  },
-  teamText: { fontSize: 16, color: '#333', textAlign: 'center' },
-  progressBarContainer: {
+  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
+  title: { fontSize: 24, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 },
+  header: { fontSize: 20, fontWeight: 'bold', marginTop: 15 },
+  text: { fontSize: 18, marginVertical: 5 },
+  bold: { fontWeight: 'bold' },
+  profit: { color: 'green' },
+  loss: { color: 'red' },
+  error: { color: 'red', textAlign: 'center', fontSize: 16 },
+  progressBar: {
+    height: 20,
     width: '100%',
-    height: 30,
     backgroundColor: '#e0e0e0',
-    borderRadius: 8,
-    overflow: 'hidden',
-    marginVertical: 20,
+    borderRadius: 10,
+    marginVertical: 10,
   },
-  progressBar: { height: '100%', justifyContent: 'center', alignItems: 'center' },
-  progressText: { color: '#fff', fontWeight: 'bold' },
-  safetyLabel: { fontSize: 20, fontWeight: 'bold', textAlign: 'center', marginTop: 10 },
-  noDataText: { fontSize: 16, textAlign: 'center', color: 'gray' },
+  safetyText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
 });
 
 export default MonitorOddsScreen;

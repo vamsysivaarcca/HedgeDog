@@ -8,7 +8,6 @@ import {
   StyleSheet,
   Alert,
   TextInput,
-  Button,
 } from 'react-native';
 import axios from 'axios';
 
@@ -16,23 +15,14 @@ const EventOddsScreen = ({ route, navigation }) => {
   const { sport, region, bookmaker, market, userId, eventId } = route.params;
   console.log('Received route params on the EventOddsScreen:', route.params);
 
-  const [marketsData, setMarketsData] = useState([]); // Store all markets dynamically
+  const [marketsData, setMarketsData] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOutcome, setSelectedOutcome] = useState(null); // Selected team/outcome
-  const [betAmount, setBetAmount] = useState(''); // Bet amount input
-  const [adjustedOdds, setAdjustedOdds] = useState(0); // Adjustable odds
+  const [selectedOutcome, setSelectedOutcome] = useState(null);
+  const [betAmount, setBetAmount] = useState('');
+  const [adjustedOdds, setAdjustedOdds] = useState(0);
 
-  // Fetch odds data dynamically
   const fetchEventOdds = async () => {
     try {
-      console.log('Fetching odds for:', {
-        sport,
-        region,
-        bookmaker,
-        market,
-        eventId,
-      });
-
       const response = await axios.get(
         `http://192.168.86.25:8080/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
       );
@@ -43,15 +33,12 @@ const EventOddsScreen = ({ route, navigation }) => {
         return;
       }
 
-      // Extract all markets and outcomes dynamically
       const markets = selectedEvent.bookmakers[0]?.markets || [];
-      console.log('Fetched Markets Data:', markets);
       setMarketsData(markets);
 
-      // Set the initial odds
       const firstOutcome = markets[0]?.outcomes[0];
       if (firstOutcome) {
-        setAdjustedOdds(firstOutcome.price); // Initialize odds
+        setAdjustedOdds(firstOutcome.price);
       }
     } catch (error) {
       console.error('Error fetching odds:', error.message);
@@ -68,11 +55,10 @@ const EventOddsScreen = ({ route, navigation }) => {
   const adjustOdds = (direction) => {
     setAdjustedOdds((prevOdds) => {
       let newOdds = direction === 'up' ? prevOdds + 0.1 : prevOdds - 0.1;
-      return Math.max(1, Math.min(newOdds, 100)); // Keep odds in range [1, 100]
+      return Math.max(1, Math.min(newOdds, 100));
     });
   };
 
-  // Handle navigation to MonitorOddsScreen
   const handleMonitorOdds = async () => {
     if (!selectedOutcome) {
       Alert.alert('Error', 'Please select a team or outcome to monitor.');
@@ -83,18 +69,6 @@ const EventOddsScreen = ({ route, navigation }) => {
       Alert.alert('Error', 'Please enter a valid bet amount.');
       return;
     }
-
-    console.log('Starting to monitor odds:', {
-      userId,
-      eventId,
-      sport,
-      region,
-      market,
-      bookmaker,
-      selectedOutcome,
-      adjustedOdds,
-      betAmount,
-    });
 
     try {
       const response = await axios.get('http://192.168.86.25:8080/api/odds/monitor', {
@@ -111,7 +85,6 @@ const EventOddsScreen = ({ route, navigation }) => {
         },
       });
 
-      console.log('Monitor API Response:', response.data);
       navigation.navigate('MonitorOddsScreen', {
         userId,
         eventId,
@@ -126,8 +99,9 @@ const EventOddsScreen = ({ route, navigation }) => {
 
   const renderMarketSection = ({ item }) => {
     const { key, outcomes } = item;
+
     return (
-      <View style={styles.marketSection}>
+      <View style={styles.card}>
         <Text style={styles.marketTitle}>{key.toUpperCase()}</Text>
         {outcomes?.map((outcome, index) => (
           <TouchableOpacity
@@ -142,7 +116,7 @@ const EventOddsScreen = ({ route, navigation }) => {
             }}
           >
             <Text style={styles.outcomeText}>
-              {outcome.name}: {outcome.price}
+              {outcome.name} - {outcome.price}
               {outcome.point ? ` (${outcome.point})` : ''}
             </Text>
           </TouchableOpacity>
@@ -166,9 +140,13 @@ const EventOddsScreen = ({ route, navigation }) => {
             <>
               <Text style={styles.inputLabel}>Adjust Odds</Text>
               <View style={styles.adjustOddsContainer}>
-                <Button title="-" onPress={() => adjustOdds('down')} />
+                <TouchableOpacity style={styles.adjustButton} onPress={() => adjustOdds('down')}>
+                  <Text style={styles.adjustButtonText}>-</Text>
+                </TouchableOpacity>
                 <Text style={styles.adjustedOddsText}>{adjustedOdds.toFixed(2)}</Text>
-                <Button title="+" onPress={() => adjustOdds('up')} />
+                <TouchableOpacity style={styles.adjustButton} onPress={() => adjustOdds('up')}>
+                  <Text style={styles.adjustButtonText}>+</Text>
+                </TouchableOpacity>
               </View>
 
               <Text style={styles.inputLabel}>Enter Bet Amount</Text>
@@ -201,18 +179,31 @@ const EventOddsScreen = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  // Existing styles
-  adjustOddsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 20,
+  container: { flex: 1, padding: 20, backgroundColor: '#f5f5f5' },
+  title: { fontSize: 26, fontWeight: 'bold', textAlign: 'center', color: '#007bff', marginBottom: 20 },
+  inputLabel: { fontSize: 18, fontWeight: 'bold', marginBottom: 10, color: '#555' },
+  adjustOddsContainer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', marginBottom: 20 },
+  adjustButton: { backgroundColor: '#007bff', borderRadius: 10, padding: 10, marginHorizontal: 10 },
+  adjustButtonText: { color: 'white', fontSize: 22, fontWeight: 'bold' },
+  adjustedOddsText: { fontSize: 22, fontWeight: 'bold', color: '#333' },
+  input: { height: 50, borderColor: '#ddd', borderWidth: 1, marginBottom: 20, paddingHorizontal: 15, borderRadius: 8 },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginVertical: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
   },
-  adjustedOddsText: {
-    fontSize: 20,
-    marginHorizontal: 20,
-    fontWeight: 'bold',
-  },
+  marketTitle: { fontSize: 20, fontWeight: 'bold', marginBottom: 10, color: '#007bff' },
+  outcomeItem: { backgroundColor: '#e9ecef', padding: 10, borderRadius: 8, marginBottom: 5 },
+  outcomeText: { fontSize: 16, color: '#333' },
+  monitorButton: { backgroundColor: '#28a745', padding: 15, borderRadius: 8, alignItems: 'center', marginTop: 10 },
+  buttonText: { fontSize: 18, color: '#fff', fontWeight: 'bold' },
+  noDataText: { fontSize: 18, color: 'gray', textAlign: 'center', marginTop: 20 },
 });
 
 export default EventOddsScreen;
