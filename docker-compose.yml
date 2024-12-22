@@ -21,3 +21,14 @@ services:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hedgedog
       SPRING_DATASOURCE_USERNAME: hedgedog
       SPRING_DATASOURCE_PASSWORD: HedgeDog@2611
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    environment:
+      REACT_APP_BACKEND_URL: http://backend:8080
