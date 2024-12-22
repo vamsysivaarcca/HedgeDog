@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.hedgedog.HedgeDog.HedgeDogApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-12-21T07:23:21" hostname="vamsys-mbp-2.lan" time="0.676">
+<testsuite name="com.hedgedog.HedgeDog.HedgeDogApplicationTests" tests="1" skipped="0" failures="0" errors="0" timestamp="2024-12-21T07:45:00" hostname="vamsys-mbp-2.lan" time="0.593">
   <properties/>
-  <testcase name="contextLoads()" classname="com.hedgedog.HedgeDog.HedgeDogApplicationTests" time="0.676"/>
-  <system-out><![CDATA[02:23:15.192 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.hedgedog.HedgeDog.HedgeDogApplicationTests]: HedgeDogApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
-02:23:15.348 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.hedgedog.HedgeDogApplication for test class com.hedgedog.HedgeDog.HedgeDogApplicationTests
+  <testcase name="contextLoads()" classname="com.hedgedog.HedgeDog.HedgeDogApplicationTests" time="0.593"/>
+  <system-out><![CDATA[02:44:56.022 [Test worker] INFO org.springframework.test.context.support.AnnotationConfigContextLoaderUtils -- Could not detect default configuration classes for test class [com.hedgedog.HedgeDog.HedgeDogApplicationTests]: HedgeDogApplicationTests does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+02:44:56.140 [Test worker] INFO org.springframework.boot.test.context.SpringBootTestContextBootstrapper -- Found @SpringBootConfiguration com.hedgedog.HedgeDogApplication for test class com.hedgedog.HedgeDog.HedgeDogApplicationTests
 
   .   ____          _            __ _ _
  /\\ / ___'_ __ _ _(_)_ __  __ _ \ \ \ \
@@ -14,18 +14,18 @@
 
  :: Spring Boot ::                (v3.4.0)
 
-2024-12-21T02:23:15.918-05:00  INFO 33569 --- [HedgeDog] [    Test worker] c.h.HedgeDog.HedgeDogApplicationTests    : Starting HedgeDogApplicationTests using Java 17.0.13 with PID 33569 (started by vamsysivaarcca in /Users/vamsysivaarcca/Desktop/HedgeDog/backend)
-2024-12-21T02:23:15.920-05:00  INFO 33569 --- [HedgeDog] [    Test worker] c.h.HedgeDog.HedgeDogApplicationTests    : No active profile set, falling back to 1 default profile: "default"
-2024-12-21T02:23:17.133-05:00  INFO 33569 --- [HedgeDog] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
-2024-12-21T02:23:17.211-05:00  INFO 33569 --- [HedgeDog] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 66 ms. Found 3 JPA repository interfaces.
-2024-12-21T02:23:17.807-05:00  INFO 33569 --- [HedgeDog] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
-2024-12-21T02:23:17.875-05:00  INFO 33569 --- [HedgeDog] [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.2.Final
-2024-12-21T02:23:17.911-05:00  INFO 33569 --- [HedgeDog] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
-2024-12-21T02:23:18.230-05:00  INFO 33569 --- [HedgeDog] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
-2024-12-21T02:23:18.267-05:00  INFO 33569 --- [HedgeDog] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
-2024-12-21T02:23:18.429-05:00  INFO 33569 --- [HedgeDog] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@48632f69
-2024-12-21T02:23:18.431-05:00  INFO 33569 --- [HedgeDog] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
-2024-12-21T02:23:18.539-05:00  INFO 33569 --- [HedgeDog] [    Test worker] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
+2024-12-21T02:44:56.585-05:00  INFO 55796 --- [HedgeDog] [    Test worker] c.h.HedgeDog.HedgeDogApplicationTests    : Starting HedgeDogApplicationTests using Java 17.0.13 with PID 55796 (started by vamsysivaarcca in /Users/vamsysivaarcca/Desktop/HedgeDog/backend)
+2024-12-21T02:44:56.587-05:00  INFO 55796 --- [HedgeDog] [    Test worker] c.h.HedgeDog.HedgeDogApplicationTests    : No active profile set, falling back to 1 default profile: "default"
+2024-12-21T02:44:57.276-05:00  INFO 55796 --- [HedgeDog] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.
+2024-12-21T02:44:57.353-05:00  INFO 55796 --- [HedgeDog] [    Test worker] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 67 ms. Found 3 JPA repository interfaces.
+2024-12-21T02:44:57.834-05:00  INFO 55796 --- [HedgeDog] [    Test worker] o.hibernate.jpa.internal.util.LogHelper  : HHH000204: Processing PersistenceUnitInfo [name: default]
+2024-12-21T02:44:57.897-05:00  INFO 55796 --- [HedgeDog] [    Test worker] org.hibernate.Version                    : HHH000412: Hibernate ORM core version 6.6.2.Final
+2024-12-21T02:44:57.940-05:00  INFO 55796 --- [HedgeDog] [    Test worker] o.h.c.internal.RegionFactoryInitiator    : HHH000026: Second-level cache disabled
+2024-12-21T02:44:58.245-05:00  INFO 55796 --- [HedgeDog] [    Test worker] o.s.o.j.p.SpringPersistenceUnitInfo      : No LoadTimeWeaver setup: ignoring JPA class transformer
+2024-12-21T02:44:58.275-05:00  INFO 55796 --- [HedgeDog] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2024-12-21T02:44:58.393-05:00  INFO 55796 --- [HedgeDog] [    Test worker] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@481ed95c
+2024-12-21T02:44:58.394-05:00  INFO 55796 --- [HedgeDog] [    Test worker] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2024-12-21T02:44:58.477-05:00  INFO 55796 --- [HedgeDog] [    Test worker] org.hibernate.orm.connections.pooling    : HHH10001005: Database info:
 	Database JDBC URL [Connecting through datasource 'HikariDataSource (HikariPool-1)']
 	Database driver: undefined/unknown
 	Database version: 14.15
@@ -33,10 +33,10 @@
 	Isolation level: undefined/unknown
 	Minimum pool size: undefined/unknown
 	Maximum pool size: undefined/unknown
-2024-12-21T02:23:19.561-05:00  INFO 33569 --- [HedgeDog] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
-2024-12-21T02:23:19.652-05:00  INFO 33569 --- [HedgeDog] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
-2024-12-21T02:23:20.272-05:00  WARN 33569 --- [HedgeDog] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
-2024-12-21T02:23:21.165-05:00  INFO 33569 --- [HedgeDog] [    Test worker] c.h.HedgeDog.HedgeDogApplicationTests    : Started HedgeDogApplicationTests in 5.58 seconds (process running for 7.159)
+2024-12-21T02:44:59.399-05:00  INFO 55796 --- [HedgeDog] [    Test worker] o.h.e.t.j.p.i.JtaPlatformInitiator       : HHH000489: No JTA platform available (set 'hibernate.transaction.jta.platform' to enable JTA platform integration)
+2024-12-21T02:44:59.494-05:00  INFO 55796 --- [HedgeDog] [    Test worker] j.LocalContainerEntityManagerFactoryBean : Initialized JPA EntityManagerFactory for persistence unit 'default'
+2024-12-21T02:45:00.069-05:00  WARN 55796 --- [HedgeDog] [    Test worker] JpaBaseConfiguration$JpaWebConfiguration : spring.jpa.open-in-view is enabled by default. Therefore, database queries may be performed during view rendering. Explicitly configure spring.jpa.open-in-view to disable this warning
+2024-12-21T02:45:00.576-05:00  INFO 55796 --- [HedgeDog] [    Test worker] c.h.HedgeDog.HedgeDogApplicationTests    : Started HedgeDogApplicationTests in 4.275 seconds (process running for 5.577)
 No events are currently being monitored.
 Running scheduled task: Fetch Monitored Odds
 Odds monitoring updated successfully.

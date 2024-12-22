@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  postgres:
+    image: 345594578692.dkr.ecr.us-east-2.amazonaws.com/postgres:latest
+    container_name: postgres-container
+    environment:
+      POSTGRES_USER: hedgedog
+      POSTGRES_PASSWORD: HedgeDog@2611
+      POSTGRES_DB: hedgedog
+    ports:
+      - "5432:5432"
+
+  backend:
+    image: 345594578692.dkr.ecr.us-east-2.amazonaws.com/backend:latest
+    build:
+      context: ./backend
+    container_name: backend-container
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/hedgedog
+      SPRING_DATASOURCE_USERNAME: hedgedog
+      SPRING_DATASOURCE_PASSWORD: HedgeDog@2611

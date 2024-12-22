@@ -14,7 +14,7 @@ const MonitorOddsScreen = ({ route }) => {
   const fetchOddsWithHedge = async () => {
     try {
       const response = await axios.get(
-        'http://192.168.86.25:8080/api/odds/fetch-monitored-odds-with-hedge',
+        'http://3.145.12.185:8080/api/odds/fetch-monitored-odds-with-hedge',
         {
           params: { userId: userId, currentBet: betAmount },
         }

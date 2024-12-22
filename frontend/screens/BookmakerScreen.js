@@ -19,7 +19,7 @@ const BookmakerScreen = ({ route, navigation }) => {
   const fetchBookmakers = async () => {
     try {
       const response = await axios.get(
-        `http://192.168.86.25:8080/api/odds/bookmakers?sport=${sport}&region=${region}`
+        `http://3.145.12.185:8080/api/odds/bookmakers?sport=${sport}&region=${region}`
       );
       setBookmakers(response.data || []);
     } catch (error) {
