@@ -11,6 +11,7 @@ import {
 } from 'react-native';
 import axios from 'axios';
 
+const apiUrl = process.env.REACT_APP_BACKEND_URL;
 const EventOddsScreen = ({ route, navigation }) => {
   const { sport, region, bookmaker, market, userId, eventId } = route.params;
   console.log('Received route params on the EventOddsScreen:', route.params);
@@ -24,7 +25,7 @@ const EventOddsScreen = ({ route, navigation }) => {
   const fetchEventOdds = async () => {
     try {
       const response = await axios.get(
-        `http://3.145.12.185:8080/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
+        `${apiUrl}/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
       );
 
       const selectedEvent = response.data?.find((e) => e.id === eventId);
@@ -71,7 +72,7 @@ const EventOddsScreen = ({ route, navigation }) => {
     }
 
     try {
-      const response = await axios.get('http://3.145.12.185:8080/api/odds/monitor', {
+      const response = await axios.get('${apiUrl}/api/odds/monitor', {
         params: {
           userId,
           eventId,

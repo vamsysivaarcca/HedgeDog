@@ -3,7 +3,7 @@ import { View, Text, TextInput, Button, Alert, StyleSheet } from 'react-native';
 import axios from 'axios';
 import Toast from 'react-native-toast-message';
 
-
+const apiUrl = process.env.REACT_APP_BACKEND_URL;
 const LoginScreen = ({ navigation }) => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -11,7 +11,7 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = async () => {
     try {
       const response = await axios.post(
-        'http://3.145.12.185:8080/api/users/login',
+        `${apiUrl}/api/users/login`,
         null,
         { params: { username, password } }
       );

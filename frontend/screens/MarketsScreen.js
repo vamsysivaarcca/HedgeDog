@@ -15,7 +15,7 @@ const marketTypes = [
   'alternate_totals',
   'alternate_spreads',
 ];
-
+const apiUrl = process.env.REACT_APP_BACKEND_URL;
 const MarketsScreen = ({ route, navigation }) => {
   const { sport, region, bookmaker, userId } = route.params;
 

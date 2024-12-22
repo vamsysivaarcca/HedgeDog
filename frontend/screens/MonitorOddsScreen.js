@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ActivityIndicator, FlatList, Alert } from 'react-native';
 import axios from 'axios';
 
+const apiUrl = process.env.REACT_APP_BACKEND_URL;
 const MonitorOddsScreen = ({ route }) => {
   const { userId, eventId, selectedTeam, betAmount } = route.params;
 
@@ -14,7 +15,7 @@ const MonitorOddsScreen = ({ route }) => {
   const fetchOddsWithHedge = async () => {
     try {
       const response = await axios.get(
-        'http://3.145.12.185:8080/api/odds/fetch-monitored-odds-with-hedge',
+        `${apiUrl}/api/odds/fetch-monitored-odds-with-hedge`,
         {
           params: { userId: userId, currentBet: betAmount },
         }
