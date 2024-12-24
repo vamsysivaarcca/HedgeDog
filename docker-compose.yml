@@ -23,6 +23,7 @@ services:
       SPRING_DATASOURCE_PASSWORD: HedgeDog@2611
 
   frontend:
+    image: 345594578692.dkr.ecr.us-east-2.amazonaws.com/frontend:latest
     build:
       context: ./frontend
     container_name: frontend
