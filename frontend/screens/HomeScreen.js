@@ -29,7 +29,7 @@ const HomeScreen = ({ route, navigation }) => {
     try {
       console.log(`Fetching sports for region: ${region}`);
       const response = await axios.get(
-        `${apiUrl}/api/odds/sports?region=${region}`
+        `'http://3.128.158.120:8080'/api/odds/sports?region=${region}`
       );
 
       const data = response.data;

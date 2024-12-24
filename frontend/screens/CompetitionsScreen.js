@@ -30,7 +30,7 @@ const CompetitionsScreen = ({ route, navigation }) => {
       });
 
       const response = await axios.get(
-        `${apiUrl}/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
+        `'http://3.128.158.120:8080'/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
       );
 
       console.log('Raw Events Response:', response.data);

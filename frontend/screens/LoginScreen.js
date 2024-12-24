@@ -11,7 +11,7 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = async () => {
     try {
       const response = await axios.post(
-        `${apiUrl}/api/users/login`,
+        `'http://3.128.158.120:8080'/api/users/login`,
         null,
         { params: { username, password } }
       );

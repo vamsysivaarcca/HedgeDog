@@ -25,7 +25,7 @@ const EventOddsScreen = ({ route, navigation }) => {
   const fetchEventOdds = async () => {
     try {
       const response = await axios.get(
-        `${apiUrl}/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
+        `'http://3.128.158.120:8080'/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
       );
 
       const selectedEvent = response.data?.find((e) => e.id === eventId);
@@ -72,7 +72,7 @@ const EventOddsScreen = ({ route, navigation }) => {
     }
 
     try {
-      const response = await axios.get('${apiUrl}/api/odds/monitor', {
+      const response = await axios.get(''http://3.128.158.120:8080'/api/odds/monitor', {
         params: {
           userId,
           eventId,
