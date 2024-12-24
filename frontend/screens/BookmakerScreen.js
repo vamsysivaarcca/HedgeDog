@@ -10,7 +10,6 @@ import {
 } from 'react-native';
 import axios from 'axios';
 
-const apiUrl = process.env.REACT_APP_BACKEND_URL;
 const BookmakerScreen = ({ route, navigation }) => {
   const { sport, region, userId } = route.params;
 
@@ -20,7 +19,7 @@ const BookmakerScreen = ({ route, navigation }) => {
   const fetchBookmakers = async () => {
     try {
       const response = await axios.get(
-        `'http://3.128.158.120:8080'/api/odds/bookmakers?sport=${sport}&region=${region}`
+        'http://3.128.158.120:8080/api/odds/bookmakers?sport=${sport}&region=${region}'
       );
       setBookmakers(response.data || []);
     } catch (error) {

@@ -14,8 +14,6 @@ const regions = [
   { key: 'au', name: 'Australia' },
 ];
 
-
-const apiUrl = process.env.REACT_APP_BACKEND_URL;
 const RegionScreen = ({ navigation, route }) => {
   const { userId } = route.params || {}; // Safely extract userId
 

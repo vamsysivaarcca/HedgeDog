@@ -10,8 +10,6 @@ import {
 } from 'react-native';
 import axios from 'axios';
 
-
-const apiUrl = process.env.REACT_APP_BACKEND_URL;
 const CompetitionsScreen = ({ route, navigation }) => {
   const { sport, region, bookmaker, market, userId } = route.params;
   console.log('Received params in CompetitionsScreen:', { sport, region, bookmaker, market, userId });
@@ -30,7 +28,7 @@ const CompetitionsScreen = ({ route, navigation }) => {
       });
 
       const response = await axios.get(
-        `'http://3.128.158.120:8080'/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
+        'http://3.128.158.120:8080/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}'
       );
 
       console.log('Raw Events Response:', response.data);
