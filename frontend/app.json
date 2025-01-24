@@ -13,14 +13,16 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
+      "bundleIdentifier": "com.yourname.hedgedog",
       "supportsTablet": true
     },
     "android": {
+      
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.vamsysivaarcca.HedgeDogFrontend"
+      "package": "com.vamsysivaarcca.HedgeDog"
     },
     "web": {
       "favicon": "./assets/favicon.png"
