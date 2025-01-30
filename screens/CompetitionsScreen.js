@@ -28,7 +28,7 @@ const CompetitionsScreen = ({ route, navigation }) => {
       });
 
       const response = await axios.get(
-        `http://192.168.86.25:8080/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
+        `http://192.168.86.49:8080/api/odds/live-odds?sport=${sport}&region=${region}&bookmakers=${bookmaker}&markets=${market}`
       );
 
       console.log('Raw Events Response:', response.data);
