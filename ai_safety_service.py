@@ -1,8 +1,10 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 import numpy as np
 from sklearn.linear_model import LinearRegression
 
 app = Flask(__name__)
+CORS(app, origins="*") 
 
 # Sample Training Data
 odds = np.array([1.2, 1.5, 2.0, 2.5, 3.0]).reshape(-1, 1)
@@ -17,6 +19,15 @@ model.fit(odds, safety)
 def predict_safety():
     try:
         data = request.get_json()
+        print("📢 Received Request:", data)  # Log received request
+
+        if not data:
+            print("❌ ERROR: No data received!")
+            return jsonify({"error": "Request body is empty"}), 400
+
+        if "odds" not in data:
+            print("❌ ERROR: Missing 'odds' key in request!")
+            return jsonify({"error": "Missing 'odds' key"}), 400
         input_odds = np.array(data['odds']).reshape(-1, 1)
         predicted_safety = model.predict(input_odds)
         
