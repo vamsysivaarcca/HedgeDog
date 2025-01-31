@@ -14,7 +14,7 @@ const MonitorOddsScreen = ({ route }) => {
   const fetchOddsWithHedge = async () => {
     try {
       const response = await axios.get(
-        'http://192.168.86.49:8080/api/odds/fetch-monitored-odds-with-hedge',
+        'https://c5ac-68-194-58-76.ngrok-free.app/api/odds/fetch-monitored-odds-with-hedge',
         {
           params: { userId: userId, currentBet: betAmount },
         }
@@ -24,7 +24,7 @@ const MonitorOddsScreen = ({ route }) => {
 
       // Call the predict_safety API for risk percentage
       const safetyResponse = await axios.post(
-        'http://192.168.86.49:5001/predict_safety',
+        'https://40e5-68-194-58-76.ngrok-free.app/predict_safety',
         { odds: [response.data.latestOddsSelectedTeam] }
       );
       setSafetyPercentage(safetyResponse.data.predictions[0].safety);

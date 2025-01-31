@@ -21,7 +21,10 @@
     "react-native-gesture-handler": "~2.20.2",
     "react-native-paper": "^5.12.5",
     "react-native-reanimated": "^3.16.4",
-    "react-native-toast-message": "^2.2.1"
+    "react-native-safe-area-context": "^5.1.0",
+    "react-native-screens": "^4.5.0",
+    "react-native-toast-message": "^2.2.1",
+    "react-navigation": "^5.0.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.2",

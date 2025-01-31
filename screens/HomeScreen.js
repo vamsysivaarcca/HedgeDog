@@ -29,7 +29,7 @@ const HomeScreen = ({ route, navigation }) => {
     try {
       console.log(`Fetching sports for region: ${region}`);
       const response = await axios.get(
-        `http://192.168.86.49:8080/api/odds/sports?region=${region}`
+        `https://c5ac-68-194-58-76.ngrok-free.app/api/odds/sports?region=${region}`
       );
 
       const data = response.data;

@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "HedgeDogFrontend",
+    "name": "HedgeDog",
     "slug": "HedgeDogFrontend",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
@@ -13,7 +13,9 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "bundleIdentifier": "com.yourname.hedgedog"
     },
     "android": {
       "adaptiveIcon": {
@@ -23,6 +25,11 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "8dcb0916-3a09-45df-a631-6ecf0c790768"
+      }
     }
   }
 }

@@ -19,7 +19,7 @@ const BookmakerScreen = ({ route, navigation }) => {
   const fetchBookmakers = async () => {
     try {
       const response = await axios.get(
-        `http://192.168.86.49:8080/api/odds/bookmakers?sport=${sport}&region=${region}`
+        `https://c5ac-68-194-58-76.ngrok-free.app/api/odds/bookmakers?sport=${sport}&region=${region}`
       );
       setBookmakers(response.data || []);
     } catch (error) {

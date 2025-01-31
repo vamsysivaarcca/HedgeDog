@@ -11,7 +11,7 @@ const LoginScreen = ({ navigation }) => {
   const handleLogin = async () => {
     try {
       const response = await axios.post(
-        'http://192.168.86.49:8080/api/users/login',
+        'https://c5ac-68-194-58-76.ngrok-free.app/api/users/login',
         null,
         { params: { username, password } }
       );
